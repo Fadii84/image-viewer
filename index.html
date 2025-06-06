@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Image</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #prompt {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+    #imageContainer {
+      display: none;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="prompt">Do you want to see beautiful picture?</div>
+  <button onclick="showImage()">Yes</button>
+  <button onclick="deny()">No</button>
+
+  <div id="imageContainer">
+    <img id="mainImage" src="" alt="Beautiful Image" />
+  </div>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    function showImage() {
+      const imgUrl = getQueryParam("img");
+      if (!imgUrl) {
+        alert("Image URL not found!");
+        return;
+      }
+      document.getElementById("prompt").style.display = "none";
+      document.querySelector("button:nth-of-type(1)").style.display = "none";
+      document.querySelector("button:nth-of-type(2)").style.display = "none";
+      document.getElementById("mainImage").src = imgUrl;
+      document.getElementById("imageContainer").style.display = "block";
+    }
+
+    function deny() {
+      alert("Okay, maybe next time!");
+    }
+  </script>
+</body>
+</html>
