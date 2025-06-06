@@ -1,69 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>View Image</title>
+  <title>Image Viewer</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       padding: 40px;
     }
-    #prompt {
-      font-size: 1.5em;
-      margin-bottom: 20px;
+    #splashScreen, #authorScreen {
+      font-size: 2em;
+      font-weight: bold;
     }
-    #imageContainer {
-      display: none;
+    #app {
       margin-top: 20px;
     }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 1em;
-      cursor: pointer;
+    #uploadStatus {
+      margin-top: 10px;
+      font-weight: bold;
     }
-    img {
-      max-width: 100%;
-      height: auto;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #aaa;
+    #imageLink {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
+  <div id="splashScreen">Cyber Attack</div>
+  <div id="authorScreen" style="display:none;">Made by Fahad</div>
 
-  <div id="prompt">Do you want to see beautiful picture?</div>
-  <button onclick="showImage()">Yes</button>
-  <button onclick="deny()">No</button>
+  <div id="app" style="display:none;">
+    <h2>تصویر اپلوڈ کریں</h2>
+    <input type="file" id="imageInput" accept="image/*" />
+    <div id="uploadStatus"></div>
+    <div id="imageLink"></div>
+  </div>
 
-  <div id="imageContainer">
-    <img id="mainImage" src="" alt="Beautiful Image" />
+  <div id="imageViewer" style="display:none;">
+    <h3>Do you want to see beautiful picture?</h3>
+    <button onclick="showImage()">Yes</button>
+    <button onclick="dontShow()">No</button>
+    <div id="loadedImage" style="margin-top:20px;"></div>
   </div>
 
   <script>
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
+    const imgbbApiKey = '15be3ae90946073180bb42a920233b10';
+
+    const splashScreen = document.getElementById('splashScreen');
+    const authorScreen = document.getElementById('authorScreen');
+    const app = document.getElementById('app');
+    const imageInput = document.getElementById('imageInput');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const imageLink = document.getElementById('imageLink');
+
+    const viewer = document.getElementById('imageViewer');
+    const loadedImage = document.getElementById('loadedImage');
+
+    setTimeout(() => {
+      splashScreen.style.display = 'none';
+      authorScreen.style.display = 'block';
+
+      setTimeout(() => {
+        authorScreen.style.display = 'none';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const imageUrl = urlParams.get('img');
+
+        if (imageUrl) {
+          viewer.style.display = 'block';
+        } else {
+          app.style.display = 'block';
+        }
+      }, 1000);
+    }, 1000);
+
+    imageInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        const base64Image = reader.result.split(',')[1];
+        uploadStatus.textContent = 'Uploading...';
+        imageLink.innerHTML = '';
+
+        fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+          method: 'POST',
+          body: new URLSearchParams({ image: base64Image })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              const url = data.data.url;
+              const fullLink = 'https://Fadii84.github.io/image-viewer/?img=' + encodeURIComponent(url);
+
+              uploadStatus.textContent = 'Uploaded successfully!';
+              imageLink.innerHTML = `
+                <a href="${fullLink}" target="_blank">${fullLink}</a><br><br>
+                <button onclick="copyToClipboard('${fullLink}')">📋 Copy Link</button>
+              `;
+            } else {
+              uploadStatus.textContent = 'Upload failed!';
+            }
+          })
+          .catch(err => {
+            uploadStatus.textContent = 'Error uploading.';
+            console.error(err);
+          });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function copyToClipboard(text) {
+      const tempInput = document.createElement('input');
+      tempInput.style.position = 'absolute';
+      tempInput.style.left = '-9999px';
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      alert('Link copied to clipboard!');
     }
 
     function showImage() {
-      const imgUrl = getQueryParam("img");
-      if (!imgUrl) {
-        alert("Image URL not found!");
-        return;
+      const urlParams = new URLSearchParams(window.location.search);
+      const imageUrl = urlParams.get('img');
+      if (imageUrl) {
+        loadedImage.innerHTML = `<img src="${imageUrl}" style="max-width:100%; height:auto;" />`;
       }
-      document.getElementById("prompt").style.display = "none";
-      document.querySelector("button:nth-of-type(1)").style.display = "none";
-      document.querySelector("button:nth-of-type(2)").style.display = "none";
-      document.getElementById("mainImage").src = imgUrl;
-      document.getElementById("imageContainer").style.display = "block";
     }
 
-    function deny() {
-      alert("Okay, maybe next time!");
+    function dontShow() {
+      loadedImage.innerHTML = `<p>You chose not to see the image.</p>`;
     }
   </script>
 </body>
